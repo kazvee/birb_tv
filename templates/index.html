@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>📺 Birb TV 🐦</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body class="{{ theme }}">
+
+    <div class="navbar">
+        <div class="nav-left">
+            <span>📺 Birb TV 🐦</span>
+        </div>
+
+        <div class="nav-right">
+            {% if user %}
+            <span class="user">👤 {{ user|upper }}</span>
+
+            <form method="POST" action="/logout" class="nav-form">
+                <button type="submit" class="nav-btn">Logout</button>
+            </form>
+            {% else %}
+            <form method="POST" action="/login/w" class="nav-form">
+                <button type="submit" class="nav-btn">Login as W</button>
+            </form>
+
+            <form method="POST" action="/login/k" class="nav-form">
+                <button type="submit" class="nav-btn">Login as K</button>
+            </form>
+            {% endif %}
+
+            <form method="POST" action="/theme/spring" class="nav-form">
+                <button type="submit" class="nav-btn">🌱</button>
+            </form>
+
+            <form method="POST" action="/theme/summer" class="nav-form">
+                <button type="submit" class="nav-btn">🌞</button>
+            </form>
+
+            <form method="POST" action="/theme/fall" class="nav-form">
+                <button type="submit" class="nav-btn">🍂</button>
+            </form>
+
+            <form method="POST" action="/theme/winter" class="nav-form">
+                <button type="submit" class="nav-btn">❄️</button>
+            </form>
+
+            <form method="POST" action="/theme/dark" class="nav-form">
+                <button type="submit" class="nav-btn">🌚</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="video-container">
+        {% if camera_on %}
+        <img src="/video">
+        {% else %}
+        <img src="https://dummyimage.com/800x450/111/ccc.png&text=WAITING+FOR+BIRBS">
+        {% endif %}
+    </div>
+
+    {% if user %}
+    <div class="controls">
+
+        {% if user == 'w' %}
+        <form method="POST" action="/w_capture">
+            <button type="submit" class="control-btn">📸 Capture</button>
+        </form>
+
+        <a href="/gallery" class="control-btn">📁 Gallery</a>
+        {% endif %}
+
+        {% if user == 'k' %}
+        <form method="POST" action="/k_capture">
+            <button type="submit" class="control-btn">📸 Capture</button>
+        </form>
+
+        <a href="/gallery" class="control-btn">📁 Gallery</a>
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+    <footer class="footer">
+        <span>Made with 🩷 for our 🐦 and 🐿️ frens.</span>
+    </footer>
+
+</body>
+
+</html>
