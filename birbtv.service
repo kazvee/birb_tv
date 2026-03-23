@@ -1,0 +1,54 @@
+Birb TV Setup Guide
+
+1. Create systemd service
+
+sudo nano /etc/systemd/system/birbtv.service
+
+2. Verify venv setup (optional but recommended)
+
+ls venv/bin/
+which python
+/home/k/coding_projects/birb_tv/venv/bin/python --version
+
+3. Add service configuration
+
+[Unit]
+Description=Birb TV Camera App
+After=network.target
+
+[Service]
+User=k
+WorkingDirectory=/home/k/coding_projects/birb_tv
+ExecStart=/home/k/coding_projects/birb_tv/venv/bin/python /home/k/coding_projects/birb_tv/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+4. Save and exit
+
+CTRL + X
+Y
+Enter
+
+5. Enable and start the service
+
+sudo systemctl daemon-reexec
+sudo systemctl enable birbtv
+sudo systemctl start birbtv
+
+6. Check service status
+
+sudo systemctl status birbtv
+
+7. Reboot test (important)
+
+sudo reboot
+
+8. Access the app
+
+http://<PI_IP>:5000
+
+9. View logs (if needed)
+
+journalctl -u birbtv -f
