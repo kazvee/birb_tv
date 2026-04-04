@@ -16,39 +16,13 @@
         <a href="/" class="nav-btn">← Back Home</a>
     </div>
 
-    <form method="POST" action="/download_selected">
-
-        <div class="actions">
-            <button type="button" class="btn" onclick="selectAll(true)">Select All</button>
-            <button type="button" class="btn" onclick="selectAll(false)">Clear</button>
-            <button type="submit" class="btn">⬇️ Download Selected</button>
+    <div class="gallery">
+        {% for img in images %}
+        <div class="image-item">
+            <input type="checkbox" name="selected" value="{{ img }}">
+            <img src="{{ img }}" onclick="openLightbox('{{ img }}')">
         </div>
-
-        <div class="gallery">
-            {% for img in images %}
-            <div class="image-item">
-                <input type="checkbox" name="selected" value="{{ img }}">
-                <img src="{{ img }}" onclick="openLightbox('{{ img }}')">
-            </div>
-            {% endfor %}
-        </div>
-
-    </form>
-
-    <div class="actions">
-        {% if user == 'w' %}
-        <form method="POST" action="/w_purge" onsubmit="return confirm('Delete ALL W\'s Photos?');">
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit" class="btn">❌ Delete ALL W's Photos</button>
-        </form>
-        {% endif %}
-
-        {% if user == 'k' %}
-        <form method="POST" action="/k_purge" onsubmit="return confirm('Delete ALL K\'s Photos?');">
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit" class="btn">❌ Delete ALL K's Photos</button>
-        </form>
-        {% endif %}
+        {% endfor %}
     </div>
 
     <footer class="footer">
@@ -56,13 +30,10 @@
     </footer>
 
     <script>
-        function selectAll(state) {
-            document.querySelectorAll('input[name="selected"]').forEach(cb => {
-                cb.checked = state;
-            });
-        }
+        let currentSrc = '';
 
         function openLightbox(src) {
+            currentSrc = src;
             const lightbox = document.getElementById('lightbox');
             const img = document.getElementById('lightbox-img');
 
@@ -73,10 +44,44 @@
         function closeLightbox() {
             document.getElementById('lightbox').style.display = 'none';
         }
+
+        function prevImage() {
+            let imgs = document.querySelectorAll('.gallery img');
+            for (let i = 0; i < imgs.length; i++) {
+                if (imgs[i].src.endsWith(currentSrc.split('/').pop())) {
+                    let prevIndex = (i - 1 + imgs.length) % imgs.length;
+                    currentSrc = imgs[prevIndex].src;
+                    document.getElementById('lightbox-img').src = currentSrc;
+                    break;
+                }
+            }
+        }
+
+        function nextImage() {
+            let imgs = document.querySelectorAll('.gallery img');
+            for (let i = 0; i < imgs.length; i++) {
+                if (imgs[i].src.endsWith(currentSrc.split('/').pop())) {
+                    let nextIndex = (i + 1) % imgs.length;
+                    currentSrc = imgs[nextIndex].src;
+                    document.getElementById('lightbox-img').src = currentSrc;
+                    break;
+                }
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            const lightbox = document.getElementById('lightbox');
+            if (lightbox.style.display !== 'flex') return;
+            if (e.key === 'ArrowLeft') prevImage();
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'Escape') closeLightbox();
+        });
     </script>
 
     <div id="lightbox" onclick="closeLightbox()">
+        <span class="arrow" id="prev" onclick="event.stopPropagation(); prevImage();">&#10094;</span>
         <img id="lightbox-img">
+        <span class="arrow" id="next" onclick="event.stopPropagation(); nextImage();">&#10095;</span>
     </div>
 
 </body>

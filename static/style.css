@@ -148,6 +148,31 @@ body.dark {
     max-width: 90%;
 }
 
+.arrow {
+    color: var(--accent, #4fc3f7);
+    cursor: pointer;
+    font-size: 3rem;
+    padding: 0 1rem;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    user-select: none;
+    z-index: 1000;
+}
+
+#prev {
+    left: 20px;
+}
+
+#next {
+    right: 20px;
+}
+
+.arrow:hover {
+    color: white;
+    transform: translateY(-50%) scale(1.2);
+}
+
 .gallery {
     display: grid;
     gap: 16px;
