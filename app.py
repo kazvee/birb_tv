@@ -263,76 +263,56 @@ def k_files(filename):
     return send_from_directory(K_DIR, filename)
 
 # ------------------------
-# PURGE
+# HANDLE SELECTED
 # ------------------------
 
-@app.route('/w_purge', methods=['POST'])
-def w_purge():
-    if request.form.get('password') != W_PASSWORD:
+@app.route('/handle_selected', methods=['POST'])
+def handle_selected():
+    selected_files = request.form.getlist('selected')
+    action = request.form.get('action')
+    password = request.form.get('password')
+    user = session.get('user')
+
+    if not user or user not in ['w', 'k']:
         return ('Unauthorized', 403)
 
-    for f in glob.glob(f'{W_DIR}/*.jpg'):
-        try:
-            os.remove(f)
-        except OSError:
-            pass
+    folder = W_DIR if user == 'w' else K_DIR
+    correct_password = W_PASSWORD if user == 'w' else K_PASSWORD
 
-    return redirect(url_for('index'))
-
-
-@app.route('/k_purge', methods=['POST'])
-def k_purge():
-    if request.form.get('password') != K_PASSWORD:
-        return ('Unauthorized', 403)
-
-    for f in glob.glob(f'{K_DIR}/*.jpg'):
-        try:
-            os.remove(f)
-        except OSError:
-            pass
-
-    return redirect(url_for('index'))
-
-# ------------------------
-# DOWNLOAD PHOTOS
-# ------------------------
-
-@app.route('/download_selected', methods=['POST'])
-def download_selected():
-    files = request.form.getlist('selected')
-
-    if not files:
+    if not selected_files:
         return redirect(url_for('gallery'))
 
-    memory_file = BytesIO()
+    # DELETE (Requires password)
+    if action == 'delete':
+        if password != correct_password:
+            return ('Unauthorized', 403)
+        for f in selected_files:
+            path = f.lstrip('/')
+            abs_path = os.path.abspath(path)
+            if abs_path.startswith(os.path.abspath(folder)) and os.path.exists(abs_path):
+                os.remove(abs_path)
+        return redirect(url_for('gallery'))
 
-    with zipfile.ZipFile(memory_file, 'w') as zf:
-        for file_path in files:
-            full_path = file_path.lstrip('/')
-            abs_path = os.path.abspath(full_path)
+    # DOWNLOAD
+    elif action == 'download':
+        memory_file = BytesIO()
+        with zipfile.ZipFile(memory_file, 'w') as zf:
+            for f in selected_files:
+                path = f.lstrip('/')
+                abs_path = os.path.abspath(path)
+                if abs_path.startswith(os.path.abspath(folder)) and os.path.exists(abs_path):
+                    zf.write(abs_path, arcname=os.path.basename(abs_path))
+        memory_file.seek(0)
+        timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        filename = f'birb_{user}_{timestamp}.zip'
+        return send_file(
+            memory_file,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/zip'
+        )
 
-            if not (
-                abs_path.startswith(os.path.abspath(W_DIR)) or
-                abs_path.startswith(os.path.abspath(K_DIR))
-            ):
-                continue
-
-            if os.path.exists(abs_path):
-                zf.write(abs_path, arcname=os.path.basename(abs_path))
-
-    memory_file.seek(0)
-
-    user = session.get('user', 'anon')
-    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-
-    filename = f'birb_{user}_{timestamp}.zip'
-
-    return send_file(
-        memory_file,
-        as_attachment=True,
-        download_name=filename,
-        mimetype='application/zip'
-    )
+    return redirect(url_for('gallery'))
 
 # ------------------------
 # VIDEO STREAM
