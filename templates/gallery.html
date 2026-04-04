@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>📁 {{ user|upper }}'s Gallery</title>
-
+    
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -16,21 +16,44 @@
         <a href="/" class="nav-btn">← Back Home</a>
     </div>
 
-    <div class="gallery">
-        {% for img in images %}
-        <div class="image-item">
-            <input type="checkbox" name="selected" value="{{ img }}">
-            <img src="{{ img }}" onclick="openLightbox('{{ img }}')">
+    <form id="selectedForm" method="POST" action="/handle_selected">
+        <div class="actions">
+            <button type="button" class="btn" onclick="selectAll(true)">Select All</button>
+            <button type="button" class="btn" onclick="selectAll(false)">Clear</button>
+            <button type="submit" name="action" value="download" class="btn">⬇️ Download Selected</button>
         </div>
-        {% endfor %}
-    </div>
+
+        <div class="gallery">
+            {% for img in images %}
+            <div class="image-item">
+                <input type="checkbox" name="selected" value="{{ img }}">
+                <img src="{{ img }}" onclick="openLightbox('{{ img }}')">
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="actions">
+            <input type="password" name="password" placeholder="Password for delete">
+            <button type="button" class="btn" onclick="handleDelete()">❌ Delete Selected</button>
+        </div>
+    </form>
 
     <footer class="footer">
         <span>Made with 🩷 for 🐦 & 🐿️ frens.</span>
     </footer>
 
+    <div id="lightbox" onclick="closeLightbox()">
+        <span class="arrow" id="prev" onclick="event.stopPropagation(); prevImage();">&#10094;</span>
+        <img id="lightbox-img">
+        <span class="arrow" id="next" onclick="event.stopPropagation(); nextImage();">&#10095;</span>
+    </div>
+
     <script>
         let currentSrc = '';
+
+        function selectAll(state) {
+            document.querySelectorAll('input[name="selected"]').forEach(cb => cb.checked = state);
+        }
 
         function openLightbox(src) {
             currentSrc = src;
@@ -76,13 +99,29 @@
             if (e.key === 'ArrowRight') nextImage();
             if (e.key === 'Escape') closeLightbox();
         });
-    </script>
 
-    <div id="lightbox" onclick="closeLightbox()">
-        <span class="arrow" id="prev" onclick="event.stopPropagation(); prevImage();">&#10094;</span>
-        <img id="lightbox-img">
-        <span class="arrow" id="next" onclick="event.stopPropagation(); nextImage();">&#10095;</span>
-    </div>
+        function handleDelete() {
+            const form = document.getElementById('selectedForm');
+            const formData = new FormData(form);
+            formData.set('action', 'delete');
+
+            fetch('/handle_selected', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => {
+                if (res.status === 403) {
+                    alert('❌ Missing or incorrect password! Cannot delete selected photos.');
+                } else if (res.redirected) {
+                    window.location.href = res.url;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('⚠️ Something went wrong.');
+            });
+        }
+    </script>
 
 </body>
 
