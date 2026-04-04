@@ -141,6 +141,16 @@ body.dark {
     z-index: 999;
 }
 
+.lightbox-content {
+    text-align: center;
+}
+
+#lightbox-filename {
+    margin-top: 10px;
+    font-size: 14px;
+    word-break: break-all;
+}
+
 #lightbox img {
     border-radius: 10px;
     box-shadow: 0 0 40px var(--accent);

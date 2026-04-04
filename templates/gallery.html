@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>📁 {{ user|upper }}'s Gallery</title>
-    
+
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 
@@ -28,6 +28,10 @@
             <div class="image-item">
                 <input type="checkbox" name="selected" value="{{ img }}">
                 <img src="{{ img }}" onclick="openLightbox('{{ img }}')">
+
+                <div class="photo-info">
+                    <span class="filename">{{ img.split('/')[-1] }}</span>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -44,7 +48,10 @@
 
     <div id="lightbox" onclick="closeLightbox()">
         <span class="arrow" id="prev" onclick="event.stopPropagation(); prevImage();">&#10094;</span>
-        <img id="lightbox-img">
+        <div class="lightbox-content">
+            <img id="lightbox-img">
+            <div id="lightbox-filename"></div>
+        </div>
         <span class="arrow" id="next" onclick="event.stopPropagation(); nextImage();">&#10095;</span>
     </div>
 
@@ -59,8 +66,11 @@
             currentSrc = src;
             const lightbox = document.getElementById('lightbox');
             const img = document.getElementById('lightbox-img');
+            const filenameEl = document.getElementById('lightbox-filename');
 
             img.src = src;
+            const filename = src.split('/').pop();
+            filenameEl.textContent = filename;
             lightbox.style.display = 'flex';
         }
 
@@ -75,6 +85,8 @@
                     let prevIndex = (i - 1 + imgs.length) % imgs.length;
                     currentSrc = imgs[prevIndex].src;
                     document.getElementById('lightbox-img').src = currentSrc;
+                    document.getElementById('lightbox-filename').textContent =
+                        currentSrc.split('/').pop();
                     break;
                 }
             }
@@ -87,39 +99,35 @@
                     let nextIndex = (i + 1) % imgs.length;
                     currentSrc = imgs[nextIndex].src;
                     document.getElementById('lightbox-img').src = currentSrc;
+                    document.getElementById('lightbox-filename').textContent =
+                        currentSrc.split('/').pop();
                     break;
                 }
             }
         }
 
         document.addEventListener('keydown', e => {
-            const lightbox = document.getElementById('lightbox');
-            if (lightbox.style.display !== 'flex') return;
+            if (document.getElementById('lightbox').style.display !== 'flex') return;
             if (e.key === 'ArrowLeft') prevImage();
             if (e.key === 'ArrowRight') nextImage();
             if (e.key === 'Escape') closeLightbox();
         });
 
         function handleDelete() {
-            const form = document.getElementById('selectedForm');
-            const formData = new FormData(form);
+            const formData = new FormData(document.getElementById('selectedForm'));
             formData.set('action', 'delete');
 
             fetch('/handle_selected', {
                 method: 'POST',
                 body: formData
             })
-            .then(res => {
-                if (res.status === 403) {
-                    alert('❌ Missing or incorrect password! Cannot delete selected photos.');
-                } else if (res.redirected) {
-                    window.location.href = res.url;
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                alert('⚠️ Something went wrong.');
-            });
+                .then(res => {
+                    if (res.status === 403) {
+                        alert('❌ Missing or incorrect password!');
+                    } else {
+                        location.reload();
+                    }
+                });
         }
     </script>
 
